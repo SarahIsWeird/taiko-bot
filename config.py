@@ -1,18 +1,23 @@
+# The base config exception class.
 class ConfigError(Exception):
 	pass
 
+# The exception thrown when a line doesn't specify a key.
 class MissingKeyError(ConfigError):
 	def __init__(self, message):
 		self.message = message
 
+# The exception thrown when a line doesn't specify a value.
 class MissingValueError(ConfigError):
 	def __init__(self, message):
 		self.message = message
 
+# The config class.
 class Config:
 	options = {}
 	path = ''
 
+	# Opens a config.
 	def __init__(self, path: str):
 		print(f'Loading configuration file ({path})...')
 
@@ -22,9 +27,11 @@ class Config:
 
 			row = 0
 			for line in configFile:
+				# Ignore leading or trailing whitespaces
 				line = line.strip()
 				row = row + 1
 
+				# Ignore comments or empty lines
 				if line.startswith('#') or line == '':
 					continue
 
@@ -47,6 +54,8 @@ class Config:
 					value = int(value)
 
 				self.options[key] = value
+
+				configFile.close()
 		
 		except BaseException as error:
 			print(f'Error loading the configuration file: {error}\nQuitting.')
@@ -54,5 +63,6 @@ class Config:
 			quit() # The config file is crucial for credentials,
 				# hence we close the program in case of an exception.
 	
+	# Fetches a value given a key.
 	def get(self, key):
 		return self.options[key]
