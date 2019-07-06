@@ -1,15 +1,26 @@
 import math
 
 # The list of possible mods.
-mods = {'noMod': 0,
-		'Easy': 1,
-		'HardRock': 2,
-		'HalfTime': 4,
-		'DoubleTime': 8,
-		'Nightcore': 8,
-		'Hidden': 16,
-		'FlashLight': 32,
-		'NoFail': 64 }
+mods = {
+	'noMod': 0,
+	'NoFail': 1,
+	'Easy': 2,
+	'Hidden': 8,
+	'HardRock': 16,
+	'DoubleTime': 64,
+	'HalfTime': 256,
+	'Flashlight': 1024,
+	'Nightcore': 64 # Technically not API-compliant, but nightcore is only set alongside DoubleTime, anyways.
+}
+
+def getModString(modVal: int):
+	modStr = ''
+	for mod in mods: # Loop through the mods and change the modsVal according to the enabled mods.
+		if mods[mod] & modVal:
+			modVal -= mods[mod]
+			modStr = ' '.join([modStr, f'+{mod}'])
+	
+	return modStr
 
 # Calculate the hit window for a perfect hit (300) in ms depending on the enabled mods using the OD (Overall Difficulty).
 def getHW(od: float, enabledMods):
@@ -27,7 +38,7 @@ def getHW(od: float, enabledMods):
 	if enabledMods & mods['HalfTime']:
 		newOd = newOd / 0.75 - 5.5
 	
-	return round(49.5 - (newOd / 0.5) * 1.5, 1)
+	return round(49.5 - (round(newOd, 2) / 0.5) * 1.5, 1)
 
 # Given the maximum combo, misses and the accuracy, this calculates the number of bad hits (100s).
 def getHundreds(maxcombo: int, misses: int, acc: float):
@@ -43,14 +54,16 @@ def calcPP(stars: float, maxcombo: int, combo: int, hundreds: int, misses: int, 
 	strainVal = math.pow(strainVal, 2) / 100000.0
 
 	lenBonus = min(1.0, maxcombo / 1500.0) * 0.1 + 1.0
-	strainVal *= lenBonus * math.pow(0.985, misses)
+	strainVal *= lenBonus
+	
+	strainVal *= math.pow(0.985, misses)
 
 	strainVal *= min(math.sqrt(combo) / math.sqrt(maxcombo), 1.0)
 
 	if enabledMods & mods['Hidden']:
 		strainVal *= 1.025
 	
-	if enabledMods & mods['FlashLight']:
+	if enabledMods & mods['Flashlight']:
 		strainVal *= 1.05 * lenBonus
 	
 	strainVal *= acc / 100

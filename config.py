@@ -17,6 +17,8 @@ class Config:
 	options = {}
 	path = ''
 
+	saved = {}
+
 	# Opens a config.
 	def __init__(self, path: str):
 		print(f'Loading configuration file ({path})...')
@@ -54,8 +56,6 @@ class Config:
 					value = int(value)
 
 				self.options[key] = value
-
-				configFile.close()
 		
 		except BaseException as error:
 			print(f'Error loading the configuration file: {error}\nQuitting.')
@@ -66,3 +66,9 @@ class Config:
 	# Fetches a value given a key.
 	def get(self, key):
 		return self.options[key]
+	
+	def save(self, key, value):
+		self.saved[key] = value
+	
+	def load(self, key):
+		return self.saved[key]

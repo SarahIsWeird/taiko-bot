@@ -18,3 +18,16 @@ class API():
 	# Same as getBeatmapJson(), but converts the string to a python JSON object for easier use.
 	def getBeatmap(self, id: int):
 		return json.loads(self.getBeatmapJson(id))
+	
+	# Gets the JSON as a string with all information of the last play(s) of a given player.
+	def getUserRecentJson(self, user: str or int, limit: int = 1):
+		if isinstance(user, str):
+			userType = 'string'
+		else:
+			userType = 'id'
+
+		response = urllib.request.urlopen(f'{self.apiUrl}get_user_recent?k={self.apiKey}&u={user}&m=1&limit={limit}&type={userType}')
+		return response.read().decode('utf-8')
+	
+	def getUserRecent(self, user: str or int, limit: int = 1):
+		return json.loads(self.getUserRecentJson(user, limit))

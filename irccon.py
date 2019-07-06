@@ -5,12 +5,25 @@ triggers = ['PRIVMSG']
 
 # The base IRC client exception class.
 class IRCError(Exception):
-	pass
+	def __init__(self, message):
+		self.message = message
 
 # The exception thrown when a bad trigger was passed to IRC.addEventHook().
 class TriggerNotFoundError(IRCError):
 	def __init__(self, message):
-		self.message = message
+		super().__init__(message)
+
+class NotAnEventError(IRCError):
+	def __init__(self, message):
+		super().__init__(message)
+
+class IRCEvent:
+	def __init__(self):
+		self.eventName = 'Event'
+
+class IRCQuitEvent(IRCEvent):
+	def __init__(self):
+		self.eventName = 'QuitEvent'
 
 # The IRC client class. Handles most of the stuff, including to responding to PINGs.
 class IRC:
@@ -21,6 +34,10 @@ class IRC:
 
 	nameRegex = re.compile(r':\w*!')
 	msgRegex = re.compile(r'')
+
+	recvBufSize = 2048
+
+	eventQueue = []
 
 	# Sets the socket
 	def __init__(self):
@@ -34,6 +51,31 @@ class IRC:
 		except ValueError:
 			raise TriggerNotFoundError(f'Trigger {trigger} does not exist!')
 	
+	# Queues an event.
+	def queueEvent(self, event):
+		if not isinstance(event, IRCEvent):
+			raise NotAnEventError(f'{event} is not an instance of IRCEvent!')
+
+		self.eventQueue += [event]
+	
+	# Processes all events in the event queue.
+	def processEvents(self):
+		for event in self.eventQueue:
+			if isinstance(event, IRCQuitEvent):
+				self.disconnect()
+				self.disconnect = (lambda: True)
+	
+	# Looks for an instance of an event in the event queue.
+	def isInEventQueue(self, event):
+		if not isinstance(event, IRCEvent):
+			raise NotAnEventError(f'{event} is not an instance of IRCEvent!')
+
+		for e in self.eventQueue:
+			if isinstance(e, type(event)):
+				return True
+		
+		return False
+
 	# Sends a normal IRC message to the server.
 	def send(self, msg):
 		self.irc.send(msg + '\r\n')
@@ -56,15 +98,31 @@ class IRC:
 		self.irc.send(bytes(f'USER {nick} {nick} {nick} :{nick}\r\n', 'utf-8'))
 		self.irc.send(bytes(f'NICK {nick}\r\n', 'utf-8'))
 	
-	# Joins a channel (unused in this bot)
+	# Joins a channel (Unused in this bot, and should never be used!)
 	def join(self, channel):
 		self.irc.send(bytes(f'JOIN {channel}\r\n', 'utf-8'))
 		print(f'Joined {channel}.')
 	
+	# Sets the buffer size of the receive buffer.
+	def setRecvBufSize(self, size: int):
+		self.recvBufSize = size
+	
 	# Receives the text stream from the IRC server.
 	# It will search for PINGs and automatically send a response PONG.
 	def receive(self) -> list:
-		text = self.irc.recv(2048)
+		try:
+			text = self.irc.recv(self.recvBufSize)
+		except KeyboardInterrupt:
+			self.disconnect()
+			quit()
+		except:
+			if self.isInEventQueue(IRCQuitEvent()):
+				self.disconnect()
+				quit()
+			else:
+				raise IRCError('Something went wrong with receiving. (Code 0x01)')
+
+		self.processEvents()
 
 		# Respond to PINGs
 		if text.find(bytes('PING', 'utf-8')) != -1:
@@ -75,7 +133,7 @@ class IRC:
 		lines = []
 
 		for line in splitText:
-			# Filtering, sometimes lines start with b' for some reason.
+			# Filtering, sometimes lines start with b' for some reason, which messes up the detection.
 			if line.startswith('b\''):
 				line = line[2:]
 			if line.find('PRIVMSG') != -1:
@@ -91,6 +149,7 @@ class IRC:
 		return splitText
 	
 	# Disconnects from the server.
-	def disconnect(self):
+	def disconnect(self): #pylint: disable=method-hidden
 		self.irc.send(bytes('QUIT\r\n', 'utf-8'))
 		self.irc.close()
+		print('Disconnected.')
