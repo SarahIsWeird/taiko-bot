@@ -23,6 +23,7 @@ irc = irccon.IRC()
 irc.server(conf.get('ircServer'), conf.get('port'))
 irc.auth(ircName, conf.get('pw'))
 irc.setRecvBufSize(conf.get('recv_buf'))
+irc.setRateLimit(conf.get('rate_limit'))
 
 # The main hook of the bot. This is called when a PRIVMSG is received.
 # The function finds issued commands and responds correspondingly.
