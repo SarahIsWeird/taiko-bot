@@ -1,4 +1,4 @@
-import urllib.request, json, config
+import urllib.request, json, config, pp
 
 # The API class enabling calls to the osu! API.
 # For more info on this, please refer to the GitHub wiki for the osu! API linked in the README.md file.
@@ -11,13 +11,13 @@ class API():
 		self.apiKey = conf.get('apiKey')
 
 	# Gets the JSON as a string with all information for a given beatmap.
-	def getBeatmapJson(self, id: int):
-		response = urllib.request.urlopen(f'{self.apiUrl}get_beatmaps?k={self.apiKey}&b={id}')
+	def getBeatmapJson(self, id: int, mods = pp.mods['noMod']):
+		response = urllib.request.urlopen(f'{self.apiUrl}get_beatmaps?k={self.apiKey}&b={id}&mods={mods}')
 		return response.read().decode('utf-8')
 
 	# Same as getBeatmapJson(), but converts the string to a python JSON object for easier use.
-	def getBeatmap(self, id: int):
-		return json.loads(self.getBeatmapJson(id))
+	def getBeatmap(self, id: int, mods = pp.mods['noMod']):
+		return json.loads(self.getBeatmapJson(id, mods))
 	
 	# Gets the JSON as a string with all information of the last play(s) of a given player.
 	def getUserRecentJson(self, user: str or int, limit: int = 1):

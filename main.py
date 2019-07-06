@@ -68,7 +68,7 @@ def msgHook(ircClient: irccon.IRC, line):
 
 		foundTaikoMap = False   # Was there a taiko map in the set?
 		
-		beatmapSet = api.getBeatmap(setid)
+		beatmapSet = api.getBeatmap(setid, modsVal)
 		
 		for beatmap in beatmapSet: # Loop through all the beatmaps in the set
 			if beatmap['mode'] != '1': # Speed up the process for mixed-mode beatmap sets
@@ -225,7 +225,7 @@ class ConsoleThread(threading.Thread):
 				mods = int(lastPlay['enabled_mods'])
 				combo = int(lastPlay['maxcombo'])
 
-				beatmap = api.getBeatmap(lastPlay['beatmap_id'])[0]
+				beatmap = api.getBeatmap(lastPlay['beatmap_id'], mods)[0]
 
 				artist = beatmap['artist']
 				title = beatmap['title']
