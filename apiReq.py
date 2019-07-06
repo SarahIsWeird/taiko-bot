@@ -12,6 +12,9 @@ class API():
 
 	# Gets the JSON as a string with all information for a given beatmap.
 	def getBeatmapJson(self, id: int, mods = pp.mods['noMod']):
+		if not mods == pp.mods['DoubleTime']: # Mods that don't change the difficulty make the API return '0' for a request.
+			mods = pp.mods['noMod']			  # NoMod doesn't have this behaviour, though.
+
 		response = urllib.request.urlopen(f'{self.apiUrl}get_beatmaps?k={self.apiKey}&b={id}&mods={mods}')
 		return response.read().decode('utf-8')
 
