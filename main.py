@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import re, irccon, apiReq, config, pp, threading, sys, datetime, locale, msvcrt
+import re, irccon, apiReq, config, pp, threading, sys, datetime, locale, rateLimiting
 from msvcrt import kbhit, getch, putch
 
 QUIT = False
@@ -25,6 +25,11 @@ irc.auth(ircName, conf.get('pw'))
 irc.setRecvBufSize(conf.get('recv_buf'))
 irc.setRateLimit(conf.get('rate_limit'))
 
+# Rate limiting setup
+
+rateLimiting.setBurstTime(conf.get('burst_time'))
+rateLimiting.setMinuteLimit(conf.get('minute_count'))
+
 # The main hook of the bot. This is called when a PRIVMSG is received.
 # The function finds issued commands and responds correspondingly.
 def msgHook(ircClient: irccon.IRC, line):
@@ -36,12 +41,22 @@ def msgHook(ircClient: irccon.IRC, line):
 		return
 	
 	elif msg.find('is listening') != -1:
+		if rateLimiting.rateLimit(conf, user):
+			irc.msg(user, 'Whoa! Slow down there, bud!')
+			print(f'Rate limited user {user}.')
+			return
+
 		irc.msg(user, 'Please start playing the beatmap you want and then do /np!')
 		print(f'User {user} listened to a beatmap!\n')
 		return
 
 	# If a user wants to know the pp of a map via /np.
 	elif msg.find('is playing') != -1:
+		if rateLimiting.rateLimit(conf, user):
+			irc.msg(user, 'Whoa! Slow down there, bud!')
+			print(f'Rate limited user {user}.')
+			return
+
 		diffnameRegex = re.compile(r'\[.*\[(.*)\]\]') # The regex finding the difficulty name, see 'diffname ='.
 		setidRegex = re.compile(r'/b/([0-9]*)')       # The regex finding the set id, see 'setid ='.
 
@@ -82,7 +97,7 @@ def msgHook(ircClient: irccon.IRC, line):
 				continue
 			
 			requestedBeatmap = beatmap
-			conf.save('lastBm', beatmap)
+			conf.save(user, [beatmap, modsVal])
 		
 		if requestedBeatmap == None and foundTaikoMap == True:
 			print(f'Beatmap set id {setid} with difficulty name [{diffname}] could not be found. Is there an error?')
@@ -125,7 +140,21 @@ def msgHook(ircClient: irccon.IRC, line):
 		return
 	# Calculates the pp of the last /np'd map with a certain accuracy and miss count.
 	elif msg.find('!with') != -1:
-		lastBm = conf.load('lastBm')
+		if rateLimiting.rateLimit(conf, user):
+			irc.msg(user, 'Whoa! Slow down there, bud!')
+			print(f'Rate limited user {user}.')
+			return
+
+		try:
+			userBeatmap = conf.load(user)
+		except KeyError:
+			irc.msg(user, 'Please select a beatmap first! (Type /np)')
+			print(f'User {user} issued !with without a beatmap selected.')
+			return
+
+		lastBm = userBeatmap[0]
+		mods = userBeatmap[1]
+
 		artist = lastBm['artist']
 		title = lastBm['title']
 		diffName = lastBm['version']

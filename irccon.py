@@ -82,13 +82,14 @@ class IRC:
 
 	# Sends a normal IRC message to the server.
 	def send(self, msg):
-		if self.rateLimit:
-			sleep(self.rateLimit / 1000)
 
 		self.irc.send(msg + '\r\n')
 	
 	# Sends a private IRC message to a channel or user.
 	def msg(self, recipient, msg):
+		if self.rateLimit:
+			sleep(self.rateLimit / 1000)
+			
 		self.irc.send(bytes('PRIVMSG ' + recipient + ' ' + msg + '\r\n', 'utf-8'))
 	
 	# Sets up the server connection.
