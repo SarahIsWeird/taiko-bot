@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import re, irccon, apiReq, config, pp, threading, sys, datetime, locale, rateLimiting
-from msvcrt import kbhit, getch, putch
 
 QUIT = False
 
@@ -211,6 +210,14 @@ def msgHook(ircClient: irccon.IRC, line):
 		irc.msg(user, f'{artist} - {title} [{diffName}]{mods} | {acc}%, {misses} misses: {peppyPoints}')
 		print(f'{artist} - {title} [{diffName}]{mods} | {acc}%, {misses} misses: {peppyPoints}')
 		return
+	elif msg.find('!discord') != -1:
+		irc.msg(user, 'The place to talk about the bot or just chat: https://discord.gg/hKXQdm2')
+		print(f'Printed discord invite for {user}.')
+		return
+	elif msg.find('!help') != -1:
+		irc.msg(user, 'A list of commands can be found here: https://sarahisweird.com/2019/07/commands')
+		print(f'Printed command list for {user}.')
+		return
 	else:
 		# A normal chat message, mostly for convenience. (Avoids tabbing a bit while developing)
 		now = datetime.datetime.now()
@@ -287,7 +294,7 @@ class ConsoleThread(threading.Thread):
 						continue
 					bm_acc = float(bm_acc)
 					
-					bm_misses = input('<3 How many orerus? ').strip()
+					bm_misses = input('<3 How many misses? ').strip()
 					if bm_misses == 'cancel':
 						continue
 					bm_misses = int(bm_misses)
