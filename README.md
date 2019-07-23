@@ -2,8 +2,6 @@
 
 A simple chat bot for [osu!](https://osu.ppy.sh) written in Python. Calculates the PP for an osu!taiko map sent over private message (``/np``). Works very similarly to [Tillerino](https://github.com/Tillerino/Tillerinobot), but a lot of features are still missing.
 
-If you want to run this on your own account, great! You do need an [API key](https://osu.ppy.sh/p/api) and your [IRC password](https://osu.ppy.sh/p/irc) for osu!. Just put those two into the config file and run the bot!
-
 Note: This is my first project in Python, so a lot will be unefficient or unelegant. Feel free to make as many suggestions (or even pull requests!) as you want! I'm always happy to listen and learn!
 
 A special thanks goes to the osu! user numbermaniac, who wrote an [excellent forum post](https://osu.ppy.sh/community/forums/topics/472288) on how to calculate PP for osu!taiko. Another crucial resource was the [osu!api wiki](https://github.com/ppy/osu-api/wiki).
