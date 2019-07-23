@@ -57,14 +57,14 @@ the bot won't start. This was implemented because it indicates that you forgot t
 
 ### Currently used config entries
 
-Entry|What is this?|Do I need to change this?|Data type
--|-|-|-
-ircServer|The URL of Bancho (the IRC server).|No.|string
-port|The port of the IRC server.|No.|int
-username|The IRC username (aka your in-game name).|Yes! (Empty)|string
-pw|The IRC password.|Yes! (Empty)|string
-recv_buf|The size of the received IRC data.|No.|int
-rate_limit|The delay of messages sent over IRC.msg().|Please don't!|int
-burst_time|The time a user has to wait between calls.|Please don't!|int
-minute_count|The number of calls allowed per minute.|Please don't!|int
-api_key|The API key for the osu!api.|Yes! (Empty)|string
+Entry|What is this?|Data type
+-|-|-
+ircServer|The URL of Bancho (the IRC server).|string
+port|The port of the IRC server.|int
+username|The IRC username (aka your in-game name).|string
+pw|The IRC password.|string
+recv_buf|The size of the received IRC data.|int
+rate_limit|The delay of messages sent over IRC.msg().|int
+burst_time|The time a user has to wait between calls.|int
+minute_count|The number of calls allowed per minute.|int
+api_key|The API key for the osu!api.|string
