@@ -2,17 +2,12 @@
 
 A simple chat bot for [osu!](https://osu.ppy.sh) written in Python. Calculates the PP for an osu!taiko map sent over private message (``/np``). Works very similarly to [Tillerino](https://github.com/Tillerino/Tillerinobot), but a lot of features are still missing.
 
+Wanna join our Discord server? Click [here](https://discord.gg/hKXQdm2)!
+You can find a to-do list [here](https://github.com/SarahIsWeird/taiko-bot/wiki/To-Do-List), if you're interested!
+
 Note: This is my first project in Python, so a lot will be unefficient or unelegant. Feel free to make as many suggestions (or even pull requests!) as you want! I'm always happy to listen and learn!
 
 A special thanks goes to the osu! user numbermaniac, who wrote an [excellent forum post](https://osu.ppy.sh/community/forums/topics/472288) on how to calculate PP for osu!taiko. Another crucial resource was the [osu!api wiki](https://github.com/ppy/osu-api/wiki).
-
-## TODO
-
-- Difficulty selection when no difficulty is chosen. (Doing ``/np`` in the beatmap selection menu)
-- Convert support
-- Recent play analysis
-- The possibility to query other player's plays (dependent on the point above)
-- Support for other modes?
 
 ## Running the bot
 
