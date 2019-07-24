@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-import re, irccon, apiReq, config, pp, threading, sys, datetime, locale, rateLimiting
+import datetime
+import locale
+import re
+import sys
+import threading
+
+import apiReq
+import config
+import irccon
+import pp
+import rateLimiting
 
 QUIT = False
 
@@ -96,7 +106,7 @@ def msgHook(ircClient: irccon.IRC, line):
 				continue
 			
 			requestedBeatmap = beatmap
-			conf.save(user, [beatmap, modsVal])
+			conf.save(user, [beatmap, modsVal, 100.0, 0])
 		
 		if requestedBeatmap == None and foundTaikoMap == True:
 			print(f'Beatmap set id {setid} with difficulty name [{diffname}] could not be found. Is there an error?')
@@ -115,11 +125,12 @@ def msgHook(ircClient: irccon.IRC, line):
 		stars = float(requestedBeatmap['difficultyrating'])
 		starsRounded = roundString(stars, 2)
 		maxCombo = int(requestedBeatmap['count_normal'])
-		od = float(requestedBeatmap['diff_overall'])
+		od = pp.scaleHPOD(float(requestedBeatmap['diff_overall']), modsVal)
+		hp = pp.scaleHPOD(float(requestedBeatmap['diff_drain']), modsVal)
 		bpm = requestedBeatmap['bpm'] # Not converted to int because we only use it for printing
 		
 		# The first line shown to the user containing general info about the difficulty.
-		irc.msg(user, f'{artist} - {title} [{diffName}] by {creator}, {starsRounded}* {mods} OD{od} BPM: {bpm} FC: {maxCombo}')
+		irc.msg(user, f'{artist} - {title} [{diffName}] by {creator}, {starsRounded}* {mods} OD{od} HP{hp} BPM: {bpm} FC: {maxCombo}')
 		
 		ppString = '' # The string shown to the user as the second line in the end.
 		
@@ -135,6 +146,8 @@ def msgHook(ircClient: irccon.IRC, line):
 		irc.msg(user, ppString)
 		print(f'OD{od} {starsRounded}* FC: {maxCombo}x')
 		print(ppString + '\n')
+
+		conf.save(user, [requestedBeatmap, modsVal, 100, 0])
 
 		return
 	# Calculates the pp of the last /np'd map with a certain accuracy and miss count.
@@ -159,7 +172,7 @@ def msgHook(ircClient: irccon.IRC, line):
 		diffName = lastBm['version']
 		stars = float(lastBm['difficultyrating'])
 		maxCombo = int(lastBm['count_normal'])
-		od = float(lastBm['diff_overall'])
+		od = pp.scaleHPOD(float(lastBm['diff_overall']), mods)
 
 		arg1Regex = re.compile(r'!with ([^ ]*)? ') # Gets the first argument
 		arg2Regex = re.compile(r'!with .*? ([^ ]*)?')
@@ -203,20 +216,84 @@ def msgHook(ircClient: irccon.IRC, line):
 
 		hundreds = pp.getHundreds(maxCombo, misses, acc)
 
-		peppyPoints = roundString(pp.calcPP(stars, maxCombo, maxCombo - misses, hundreds, misses, acc, od, pp.mods['noMod']), 2)
+		peppyPoints = roundString(pp.calcPP(stars, maxCombo, maxCombo - misses, hundreds, misses, acc, od, mods), 2)
 
-		mods = ''
+		modString = pp.getModString(mods)
 
-		irc.msg(user, f'{artist} - {title} [{diffName}]{mods} | {acc}%, {misses} misses: {peppyPoints}')
-		print(f'{artist} - {title} [{diffName}]{mods} | {acc}%, {misses} misses: {peppyPoints}')
+		irc.msg(user, f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
+		print(f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
+
+		conf.save(user, [lastBm, mods, acc, misses])
+
+		return
+	elif msg.find('!mods') != -1:
+		if rateLimiting.rateLimit(conf, user):
+			irc.msg(user, 'Whoa! Slow down there, bud!')
+			print(f'Rate limited user {user}.')
+			return
+
+		try:
+			mods = pp.getModVal(msg)
+
+			userBeatmap = conf.load(user)
+		except KeyError:
+			irc.msg(user, 'Please select a beatmap first! (Type /np)')
+			print(f'User {user} issued !with without a beatmap selected.')
+			return
+		except:
+			print('Usage: mods <mod1> [mod2] [mod3]...')
+			return
+
+		lastBm = userBeatmap[0]
+		acc = userBeatmap[2]
+		misses = userBeatmap[3]
+
+		artist = lastBm['artist']
+		title = lastBm['title']
+		diffName = lastBm['version']
+		creator = lastBm['creator']
+		stars = float(lastBm['difficultyrating'])
+		starsRounded = roundString(stars, 2)
+		maxCombo = int(lastBm['count_normal'])
+		od = float(lastBm['diff_overall'])
+		hp = pp.scaleHPOD(float(lastBm['diff_drain']), mods)
+		bpm = lastBm['bpm'] # Not converted to int because we only use it for printing
+		
+		hundreds = pp.getHundreds(maxCombo, misses, acc)
+
+		modString = pp.getModString(mods)
+		
+		irc.msg(user, f'{artist} - {title} [{diffName}] by {creator}, {starsRounded}* {modString} OD{od} HP{hp} BPM: {bpm} FC: {maxCombo}')
+
+		ppString = ''
+
+		# Calculate the pp for the accuracies in the tuple
+		for acc in (95.0, 96.0, 97.0, 98.0, 99.0, 100.0):
+			ppVal = roundString(pp.calcPP(stars, maxCombo, maxCombo, pp.getHundreds(maxCombo, 0, acc), 0, acc, od, mods), 2)
+			e = ' | ' # Separator
+			if acc == 95.0: # Avoid a trailing ' | '.
+				e = ''
+			ppString = f'{ppString}{e}{acc}%: {ppVal}pp'
+
+		od = pp.scaleHPOD(od, mods)
+
+		# The second line.
+		irc.msg(user, ppString)
+		print(f'OD{od} HP{hp} {starsRounded}* FC: {maxCombo}x')
+		print(ppString + '\n')
+
+		conf.save(user, [lastBm, mods, acc, misses])
+
 		return
 	elif msg.find('!discord') != -1:
 		irc.msg(user, 'The place to talk about the bot or just chat: https://discord.gg/hKXQdm2')
 		print(f'Printed discord invite for {user}.')
+
 		return
 	elif msg.find('!help') != -1:
-		irc.msg(user, 'A list of commands can be found here: https://sarahisweird.com/2019/07/commands')
+		irc.msg(user, 'A list of commands can be found in the [GitHub wiki](https://github.com/SarahIsWeird/taiko-bot/wiki/Commands).')
 		print(f'Printed command list for {user}.')
+
 		return
 	else:
 		# A normal chat message, mostly for convenience. (Avoids tabbing a bit while developing)
@@ -237,7 +314,7 @@ class ConsoleThread(threading.Thread):
 		print('<3 Welcome to Sarah\'s bot console! :D Here\'s a list of commands you can use:')
 		print('<3  beatmap | bm: Test the beatmap feature!')
 		print('<3 lastplay | lp: Calls /beatmap/ with your last played map!')
-		print('<3  message |  @: Message a user.')
+		print('<3     with |  w: Sets the accuracy and misses for the last queried map.')
 		print('<3     quit |  q: Quit! D:')
 		print('<3 Enter \'cancel\' at anytime to stop the current command!')
 		print('')
@@ -263,6 +340,7 @@ class ConsoleThread(threading.Thread):
 				combo = int(lastPlay['maxcombo'])
 
 				beatmap = api.getBeatmap(lastPlay['beatmap_id'], mods)[0]
+				conf.save(ircName, [beatmap, mods])
 
 				artist = beatmap['artist']
 				title = beatmap['title']
@@ -310,6 +388,7 @@ class ConsoleThread(threading.Thread):
 					continue
 
 				beatmap = api.getBeatmap(bm_id)[0]
+				conf.save(ircName, [beatmap, pp.mods['noMod'], bm_acc, bm_misses])
 
 				artist = beatmap['artist']
 				title = beatmap['title']
@@ -323,13 +402,73 @@ class ConsoleThread(threading.Thread):
 
 				print(f'<3 {artist} - {title} [{diffName}] | {bm_acc}%, {bm_misses} misses, FC: {maxcombo}')
 				print(f'<3 {peppyPoints}pp')
+			elif consoleInput.startswith('with ') or consoleInput.startswith('w '):
+				splitInput = consoleInput.split(' ')
 
-			elif consoleInput.startswith('message ') or consoleInput.startswith('@ '):
+				try:
+					acc = float(splitInput[1])
+					misses = int(splitInput[2])
+
+					userBeatmap = conf.load(ircName)
+				except KeyError:
+					print('Please select a beatmap first!')
+					continue
+				except:
+					print('Usage: with <acc> <misses>')
+					continue
+
+				lastBm = userBeatmap[0]
+				mods = userBeatmap[1]
+
+				artist = lastBm['artist']
+				title = lastBm['title']
+				diffName = lastBm['version']
+				stars = float(lastBm['difficultyrating'])
+				maxCombo = int(lastBm['count_normal'])
+				od = float(lastBm['diff_overall'])
+				
+				hundreds = pp.getHundreds(maxCombo, misses, acc)
+
+				peppyPoints = roundString(pp.calcPP(stars, maxCombo, maxCombo - misses, hundreds, misses, acc, od, mods), 2)
+
+				modString = pp.getModString(mods)
+
+				print(f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
+
+				conf.save(ircName, [lastBm, mods, acc, misses])
+			elif consoleInput.startswith('mods ') or consoleInput.startswith('m '):
 				splitInput = consoleInput.split(' ')
-				irc.msg(splitInput[1], ' '.join(splitInput[2:])) # splitInput[1] is the name and [2:] is the message.
-			elif consoleInput.startswith('@'): # You don't need to have a space between the @ and the name.
-				splitInput = consoleInput.split(' ')
-				irc.msg(splitInput[0][1:], ' '.join(splitInput[1:])) # the [1:] removes the @ in front of the name.
+
+				try:
+					mods = pp.getModVal(consoleInput)
+
+					userBeatmap = conf.load(ircName)
+				except KeyError:
+					print('Please select a beatmap first!')
+					continue
+				except:
+					print('Usage: mods <mod1> [mod2] [mod3]...')
+					continue
+
+				lastBm = userBeatmap[0]
+				acc = userBeatmap[2]
+				misses = userBeatmap[3]
+
+				artist = lastBm['artist']
+				title = lastBm['title']
+				diffName = lastBm['version']
+				stars = float(lastBm['difficultyrating'])
+				maxCombo = int(lastBm['count_normal'])
+				od = float(lastBm['diff_overall'])
+				
+				hundreds = pp.getHundreds(maxCombo, misses, acc)
+
+				peppyPoints = roundString(pp.calcPP(stars, maxCombo, maxCombo - misses, hundreds, misses, acc, od, mods), 2)
+
+				modString = pp.getModString(mods)
+
+				print(f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
+				conf.save(ircName, [lastBm, mods, acc, misses])
 
 # Add the hook on a PRIVMSG to the client.
 irc.addEventHook('PRIVMSG', msgHook)

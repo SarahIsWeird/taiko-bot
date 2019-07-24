@@ -10,7 +10,15 @@ mods = {
 	'DoubleTime': 64,
 	'HalfTime': 256,
 	'Flashlight': 1024,
-	'Nightcore': 64 # Technically not API-compliant, but nightcore is only set alongside DoubleTime, anyways.
+	'Nightcore': 64, # Technically not API-compliant, but nightcore is only set alongside DoubleTime, anyways.
+	'NF': 1,
+	'EZ': 2,
+	'HD': 8,
+	'HR': 16,
+	'DT': 64,
+	'HT': 256,
+	'FL': 1024,
+	'NC': 64
 }
 
 def getModString(modVal: int):
@@ -22,9 +30,20 @@ def getModString(modVal: int):
 	
 	return modStr
 
-# Calculate the hit window for a perfect hit (300) in ms depending on the enabled mods using the OD (Overall Difficulty).
-def getHW(od: float, enabledMods):
-	newOd = od
+def getModVal(modString: int):
+	modVal = 0
+	
+	modString = modString.lower()
+
+	for mod in mods:
+		if modString.find(mod.lower()) != -1:
+			modVal += mods[mod]
+	
+	return modVal
+
+# Scaling for the HP and OD values is the same.
+def scaleHPOD(hpod: float, enabledMods):
+	newOd = hpod
 
 	if enabledMods & mods['Easy']:
 		newOd /= 2
@@ -38,7 +57,14 @@ def getHW(od: float, enabledMods):
 	if enabledMods & mods['HalfTime']:
 		newOd = newOd / 0.75 - 5.5
 	
-	return round(49.5 - (round(newOd, 2) / 0.5) * 1.5, 1)
+	if newOd > 10:
+		newOd = 10
+	
+	return round(newOd, 1)
+
+# Calculate the hit window for a perfect hit (300) in ms depending on the enabled mods using the OD (Overall Difficulty).
+def getHW(od: float, enabledMods):	
+	return round(49.5 - (round(od, 2) / 0.5) * 1.5, 1)
 
 # Given the maximum combo, misses and the accuracy, this calculates the number of bad hits (100s).
 def getHundreds(maxcombo: int, misses: int, acc: float):
