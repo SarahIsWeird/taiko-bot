@@ -1,4 +1,6 @@
-import urllib.request, json, config, pp
+import urllib.request, json 
+from . import config
+from . import pp
 
 # The API class enabling calls to the osu! API.
 # For more info on this, please refer to the GitHub wiki for the osu! API linked in the README.md file.

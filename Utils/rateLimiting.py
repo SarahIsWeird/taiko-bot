@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-import config
+from . import config
 
 burst = timedelta(seconds=3)
 minute = timedelta(minutes=1)
