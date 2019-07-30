@@ -13,7 +13,7 @@ def handle(user, msg, ircClient, conf, api):
 		"!help" : IrcCommands.Help,
 		"default" : IrcCommands.Default
 	}
-	actualCommand = parseCommand(msg, CommandSwitch.keys())
+	actualCommand = parseCommand(msg, commandSwitch.keys())
 	commandFile = commandSwitch[actualCommand]
 	commandFile.run(user, msg, ircClient, conf, api)
 
