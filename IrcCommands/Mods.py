@@ -29,7 +29,7 @@ def run(user, msg, irc, conf, api, time):
 	stars = float(lastBm['difficultyrating'])
 	starsRounded = roundString.roundString(stars, 2)
 	maxCombo = int(lastBm['count_normal'])
-	od = float(lastBm['diff_overall'])
+	od = pp.scaleHPOD(float(lastBm['diff_overall']), mods)
 	hp = pp.scaleHPOD(float(lastBm['diff_drain']), mods)
 	bpm = pp.scaleBPM(lastBm['bpm'], mods)
 	
@@ -48,8 +48,6 @@ def run(user, msg, irc, conf, api, time):
 		if acc == 95.0: # Avoid a trailing ' | '.
 			e = ''
 		ppString = f'{ppString}{e}{acc}%: {ppVal}pp'
-
-	od = pp.scaleHPOD(od, mods)
 
 	# The second line.
 	irc.msg(user, ppString)
