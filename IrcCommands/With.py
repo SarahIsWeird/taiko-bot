@@ -5,7 +5,7 @@ from Utils import roundString
 
 #Called when pm'd with
 #	!with <acc> <misses>
-def run(user, msg, irc, conf, api):
+def run(user, msg, irc, conf, api, time):
 	try:
 		userBeatmap = conf.load(user)
 	except KeyError:
@@ -34,7 +34,7 @@ def run(user, msg, irc, conf, api):
 	rawAcc = arg1Regex.search(msg)
 	if rawAcc == None: # No first argument?
 		irc.msg(user, 'Usage: !with <accuracy> <misses>')
-		print(f'Printed usage for !with for {user}. (No arguments)')
+		print(f'{time} Printed usage for !with for {user}. (No arguments)')
 		return
 
 	accMatch = accFloatRegex.search(rawAcc.group(0))
@@ -42,7 +42,7 @@ def run(user, msg, irc, conf, api):
 		accMatch = accIntRegex.search(rawAcc.group(0))
 		if accMatch == None: # Couldn't find the accuracy (xx[x][%]). -> Odd argument.
 			irc.msg(user, 'Usage: !with <accuracy> <misses>')
-			print(f'Printed usage for !with for {user}. (Odd accuracy)')
+			print(f'{time} Printed usage for !with for {user}. (Odd accuracy)')
 			return
 			
 		acc = float(accMatch.group(1))
@@ -52,13 +52,13 @@ def run(user, msg, irc, conf, api):
 	rawMisses = arg2Regex.search(msg)
 	if rawMisses == None: # No second argument?
 		irc.msg(user, 'Usage: !with <accuracy> <misses>')
-		print(f'Printed usage for !with for {user}. (No second argument)')
+		print(f'{time} Printed usage for !with for {user}. (No second argument)')
 		return
 
 	missesMatch = re.search('([0-9]*)', rawMisses.group(1)) # Look if the second argument only contains numbers.
 	if missesMatch == None:
 		irc.msg(user, 'Usage: !with <accuracy> <misses>')
-		print(f'Printed usage for !with for {user}. (Odd misses)')
+		print(f'{time} Printed usage for !with for {user}. (Odd misses)')
 		return
 
 	misses = int(missesMatch.group(0))
@@ -70,6 +70,6 @@ def run(user, msg, irc, conf, api):
 	modString = pp.getModString(mods)
 
 	irc.msg(user, f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
-	print(f'{artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
+	print(f'{time} {artist} - {title} [{diffName}]{modString} | {acc}%, {misses} misses: {peppyPoints}')
 
 	conf.save(user, [lastBm, mods, acc, misses])

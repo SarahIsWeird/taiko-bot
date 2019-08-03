@@ -3,8 +3,6 @@ from Utils import roundString
 from Utils import config
 
 def run(consoleInput, conf, api, ircName):
-	splitInput = consoleInput.split(' ')
-
 	try:
 		mods = pp.getModVal(consoleInput)
 
@@ -25,7 +23,7 @@ def run(consoleInput, conf, api, ircName):
 	diffName = lastBm['version']
 	stars = float(lastBm['difficultyrating'])
 	maxCombo = int(lastBm['count_normal'])
-	od = float(lastBm['diff_overall'])
+	od = pp.scaleHPOD(float(lastBm['diff_overall']), mods)
 				
 	hundreds = pp.getHundreds(maxCombo, misses, acc)
 

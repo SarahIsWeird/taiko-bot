@@ -1,4 +1,5 @@
 import IrcCommands
+import datetime
 
 #   When new command is created in IrcCommands folder, do the following
 #     1. Add the import in IrcCommands/__init__.py
@@ -15,7 +16,11 @@ def handle(user, msg, ircClient, conf, api):
 	}
 	actualCommand = parseCommand(msg, commandSwitch.keys())
 	commandFile = commandSwitch[actualCommand]
-	commandFile.run(user, msg, ircClient, conf, api)
+
+	now = datetime.datetime.now()
+	time = now.strftime('%r')
+
+	commandFile.run(user, msg, ircClient, conf, api, time)
 
 def parseCommand(msg, commandList):
 	for command in commandList:

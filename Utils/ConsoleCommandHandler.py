@@ -5,10 +5,12 @@ import ConsoleCommands
 #     4. Add trigger:ConsoleCommands.Package to CommandSwitch
 def handle(msg, conf, api, ircName):
 	CommandSwitch = {
-		"beatmap" : ConsoleCommands.Beatmap, "bm" : ConsoleCommands.Beatmap,
-		"lastplay" : ConsoleCommands.LastPlay, "lp" : ConsoleCommands.LastPlay,
-		"with" : ConsoleCommands.With, "w" : ConsoleCommands.With,
-		"default" : ConsoleCommands.Default
+		'beatmap' : ConsoleCommands.Beatmap, 'bm' : ConsoleCommands.Beatmap,
+		'lastplay' : ConsoleCommands.LastPlay, 'lp' : ConsoleCommands.LastPlay,
+		'with' : ConsoleCommands.With, 'w' : ConsoleCommands.With,
+		'mods': ConsoleCommands.Mods, 'm': ConsoleCommands.Mods,
+		'help': ConsoleCommands.help,
+		'default' : ConsoleCommands.Default
 	}
 	actualCommand = parseCommand(msg, CommandSwitch.keys())
 	commandFile = CommandSwitch[actualCommand]

@@ -58,12 +58,7 @@ def msgHook(ircClient: irccon.IRC, line):
 class ConsoleThread(threading.Thread):
 	def run(self):
 		print('<3 Welcome to Sarah\'s bot console! :D Here\'s a list of commands you can use:')
-		print('<3  beatmap | bm: Test the beatmap feature!')
-		print('<3 lastplay | lp: Calls /beatmap/ with your last played map!')
-		print('<3     with |  w: Sets the accuracy and misses for the last queried map.')
-		print('<3     quit |  q: Quit! D:')
-		print('<3 Enter \'cancel\' at anytime to stop the current command!')
-		print('')
+		ConsoleCommandHandler.handle('help', conf, api, ircName)
 
 		while True:
 			consoleInput = input('').strip()

@@ -1,10 +1,12 @@
+import datetime
+
 from Utils import pp
 from Utils import config
 from Utils import roundString
 
 #Called when pm'd with
 #	!mods <mods..>
-def run(user, msg, irc, conf, api):	
+def run(user, msg, irc, conf, api, time):	
 	try:
 		mods = pp.getModVal(msg)
 		userBeatmap = conf.load(user)
@@ -34,14 +36,14 @@ def run(user, msg, irc, conf, api):
 	hundreds = pp.getHundreds(maxCombo, misses, acc)
 	
 	modString = pp.getModString(mods)
-		
+	
 	irc.msg(user, f'{artist} - {title} [{diffName}] by {creator}, {starsRounded}* {modString} OD{od} HP{hp} BPM: {bpm} FC: {maxCombo}')
 
 	ppString = ''
 
 	# Calculate the pp for the accuracies in the tuple
 	for acc in (95.0, 96.0, 97.0, 98.0, 99.0, 100.0):
-		ppVal = roundString.roundString(pp.calcPP(stars, maxCombo, maxCombo, pp.getHundreds(maxCombo, 0, acc), 0, acc, od, mods), 2)
+		ppVal = roundString.roundString(pp.calcPP(stars, maxCombo, maxCombo, hundreds, 0, acc, od, mods), 2)
 		e = ' | ' # Separator
 		if acc == 95.0: # Avoid a trailing ' | '.
 			e = ''
@@ -51,7 +53,7 @@ def run(user, msg, irc, conf, api):
 
 	# The second line.
 	irc.msg(user, ppString)
-	print(f'OD{od} HP{hp} {starsRounded}* FC: {maxCombo}x')
+	print(f'{time} OD{od} HP{hp} {starsRounded}* FC: {maxCombo}x')
 	print(ppString + '\n')
 
 	conf.save(user, [lastBm, mods, acc, misses])

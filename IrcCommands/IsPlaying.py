@@ -1,4 +1,6 @@
 import re
+import datetime
+
 from Utils import config
 from Utils import pp
 from Utils import apiReq
@@ -6,7 +8,7 @@ from Utils import roundString
 
 #Called when pm'd with
 #	/np during a map
-def run(user, msg, irc, conf, api):    
+def run(user, msg, irc, conf, api, time):    
 	diffnameRegex = re.compile(r'\[.*\[(.*)\]\]') # The regex finding the difficulty name, see 'diffname ='.
 	setidRegex = re.compile(r'/b/([0-9]*)')       # The regex finding the set id, see 'setid ='.
 
@@ -24,7 +26,7 @@ def run(user, msg, irc, conf, api):
 			mods = ' '.join([mods, f'+{mod}'])
 
 	# Console logging
-	print(f'{user} issued a request for beatmap set id {setid}, difficulty [{diffname}]{mods}, the beatmap was ', end='')
+	print(f'{time} {user} issued a request for beatmap set id {setid}, difficulty [{diffname}]{mods}, the beatmap was ', end='')
 	if isTaiko:
 		print('in taiko mode.')
 	else:	
