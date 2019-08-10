@@ -46,11 +46,6 @@ def msgHook(ircClient: irccon.IRC, line):
 	# NEVER EVER REMOVE THIS!!!!! We can't have ANY messages sent to a channel!
 	if msg.find('#') != -1:
 		return
-	
-	if rateLimiting.rateLimit(conf, user):
-		irc.msg(user, 'Whoa! Slow down there, bud!')
-		print(f'Rate limited user {user}.')
-		return
 
 	CommandHandler.handle(user, msg, ircClient, conf, api)
 
