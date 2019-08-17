@@ -64,7 +64,7 @@ def scaleHPOD(hpod: float, enabledMods):
 
 # Scales the bpm for HT/DT.
 def scaleBPM(bpm, enabledMods):
-	bpm = int(bpm)
+	bpm = float(bpm)
 	
 	if enabledMods & mods['HalfTime']:
 		return bpm * 0.75
