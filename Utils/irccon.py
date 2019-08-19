@@ -147,7 +147,7 @@ class IRC:
 			if line.find('PRIVMSG') != -1:
 				user = self.nameRegex.search(line).group(0)[1:][:-1]
 
-				lines.append({'type': 'PRIVMSG', 'user': user, 'msg':  ''.join([ x for x in line.split(':') if line.index(x) > 1 ])})
+				lines.append({'type': 'PRIVMSG', 'user': user, 'msg':  ':'.join([ x for x in line.split(':') if line.index(x) > 1 ])})
 
 				# Call all hooks
 				for hook in self.messageHooks:
