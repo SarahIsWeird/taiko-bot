@@ -13,9 +13,9 @@ def run(user, msg, irc, conf, api, time):
 	setidRegex = re.compile(r'/b/([0-9]*)')       # The regex finding the set id, see 'setid ='.
 
 	setid = setidRegex.search(msg).group(1)
-	diffname = diffnameRegex.search(msg).group(1) # Search for [...], e.g. [Oni]
-	isTaiko = bool(re.search(r'<Taiko>', msg))    # Determines whether the beatmap is in taiko mode or not.
-													# This will not filter out converts!
+	# diffname = diffnameRegex.search(msg).group(1) # Search for [...], e.g. [Oni]
+	# isTaiko = bool(re.search(r'<Taiko>', msg))    # Determines whether the beatmap is in taiko mode or not.
+	# 												# This will not filter out converts!
 
 	modsVal = 0 # The binary number given to pp.calcPP() containing the enabled mods.
 	mods = ''   # The string used for message building.
@@ -25,40 +25,46 @@ def run(user, msg, irc, conf, api, time):
 			modsVal += pp.mods[mod]
 			mods = ' '.join([mods, f'+{mod}'])
 
-	# Console logging
-	print(f'{time} {user} issued a request for beatmap set id {setid}, difficulty [{diffname}]{mods}, the beatmap was ', end='')
-	if isTaiko:
-		print('in taiko mode.')
-	else:	
-		print('not in taiko mode.')
+	# # Console logging
+	# print(f'{time} {user} issued a request for beatmap set id {setid}, difficulty [{diffname}]{mods}, the beatmap was ', end='')
+	# if isTaiko:
+	# 	print('in taiko mode.')
+	# else:	
+	# 	print('not in taiko mode.')
 							
-	requestedBeatmap = None # Set to None to check if set later on.
+	# requestedBeatmap = None # Set to None to check if set later on.
 
-	foundTaikoMap = False   # Was there a taiko map in the set?
+	# foundTaikoMap = False   # Was there a taiko map in the set?
 		
 	beatmapSet = api.getBeatmap(setid, modsVal)
-		
-	for beatmap in beatmapSet: # Loop through all the beatmaps in the set
-		if beatmap['mode'] != '1': # Speed up the process for mixed-mode beatmap sets
-			continue
-			
-		if beatmap['mode'] == '1': # 'mode' == 1 means the beatmap mode is osu!taiko.
-			foundTaikoMap = True
-			
-		if beatmap['version'] != diffname: # Skip the difficulties with the wrong difficulty name.
-			continue
-			
-		requestedBeatmap = beatmap
-		conf.save(user, [beatmap, modsVal, 100.0, 0])
-		
-	if requestedBeatmap == None and foundTaikoMap == True:
-		print(f'Beatmap set id {setid} with difficulty name [{diffname}] could not be found. Is there an error?')
+
+	if not len(beatmapSet) > 0:
+		print(f'Beatmap set id {setid} could not be found. Is there an error?')
 		irc.msg(user, 'I\'m sorry, but the beatmap could not be found. Perhaps Bancho had an error?')
 		return
-	elif foundTaikoMap == False:
-		print(f'Beatmap set id {setid} did not contain a Taiko difficulty.')
+	
+	requestedBeatmap = beatmapSet[0]
+	diffName = requestedBeatmap['version']
+
+	if not requestedBeatmap['mode'] == '1':# 'mode' == 1 means the beatmap mode is osu!taiko.
+		print(f'{time} {user} issued a request for beatmap set id {setid}, difficulty [{diffName}]{mods}, the beatmap was not in taiko mode.')
 		irc.msg(user, 'The map you requested doesn\'t appear to be a taiko map. Converts are not (yet) supported, sorry.')
 		return
+		
+	# for beatmap in beatmapSet: # Loop through all the beatmaps in the set
+	# 	if beatmap['mode'] != '1': # Speed up the process for mixed-mode beatmap sets
+	# 		continue
+			
+	# 	if beatmap['mode'] == '1': # 'mode' == 1 means the beatmap mode is osu!taiko.
+	# 		foundTaikoMap = True
+			
+	# 	if beatmap['version'] != diffname: # Skip the difficulties with the wrong difficulty name.
+	# 		continue
+			
+	# 	requestedBeatmap = beatmap
+	# 	conf.save(user, [beatmap, modsVal, 100.0, 0])
+
+	print(f'{time} {user} issued a request for beatmap set id {setid}, difficulty [{diffName}]{mods}, the beatmap was in taiko mode.')
 		
 	# Metadata collection for marginally easier to read code.
 	artist = requestedBeatmap['artist']

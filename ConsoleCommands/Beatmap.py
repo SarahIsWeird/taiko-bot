@@ -37,7 +37,7 @@ def run(consoleInput, conf, api, ircName):
 	title = beatmap['title']
 	diffName = beatmap['version']
 	stars = float(beatmap['difficultyrating'])
-	od = int(beatmap['diff_overall'])
+	od = float(beatmap['diff_overall'])
 	maxcombo = int(beatmap['count_normal'])
 
 	peppyPoints = roundString.roundString(pp.calcPP(stars, maxcombo, maxcombo - bm_misses, pp.getHundreds(maxcombo, bm_misses, bm_acc), bm_misses, bm_acc, od, pp.mods['noMod']), 2)

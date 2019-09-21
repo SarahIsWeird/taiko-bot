@@ -9,6 +9,7 @@ def handle(msg, conf, api, ircName):
 		'lastplay' : ConsoleCommands.LastPlay, 'lp' : ConsoleCommands.LastPlay,
 		'with' : ConsoleCommands.With, 'w' : ConsoleCommands.With,
 		'mods': ConsoleCommands.Mods, 'm': ConsoleCommands.Mods,
+		'mapinfo': ConsoleCommands.mapinfo, 'mi': ConsoleCommands.mapinfo,
 		'help': ConsoleCommands.help,
 		'default' : ConsoleCommands.Default
 	}

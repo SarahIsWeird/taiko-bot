@@ -4,3 +4,4 @@ from . import With
 from . import Mods
 from . import help
 from . import Default
+from . import mapinfo
